@@ -30,8 +30,6 @@ function setDataGoogleSheet() {
     return s[0]
   })
 
-  Logger.log(symbols)
-
   const stocks = getStocksData(symbols)
   let startRow = 3
   for (let idx = 0; idx < symbols.length; idx++) {
@@ -65,6 +63,7 @@ function setDataGoogleSheet() {
     foreignBuyRange.setValue(curStock['f_buy_volume'])
     foreignSellRange.setValue(curStock['f_sell_volume'])
   }
+
   sheet.getRange(1, 1, 1, 1).setValue("Last update: " + new Date().toLocaleString('vn-VI', { timeZone: 'Asia/Ho_Chi_Minh' }))
 }
 
