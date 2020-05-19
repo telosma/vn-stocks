@@ -15,3 +15,7 @@ Simple Google Apps Script to get Vietnamese Stock information such as *price*, *
 ## What's next?
 - You can setup a [trigger](https://developers.google.com/apps-script/guides/triggers) for example to get stock price every minute.
 - Whatever you want with your stock data.
+
+## Current features
+- Reload stock price periodically
+- Send mail to receivers when prices change
