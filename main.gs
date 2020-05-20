@@ -9,7 +9,7 @@ function run() {
   let msg = setDataGoogleSheet()
   let currentHour = calcTime('+7.0').getHours()
   if (9 < currentHour && currentHour < 15 && Config.enable_send_mail[0] && msg != '') {
-    let htmlBody = "<h2>Hi, our stock's prices has been changed!</h2>" + msg
+    let htmlBody = "<h2>Hi, our stock's prices have been changed!</h2>" + msg
     sendMail(htmlBody)
   }
 }
