@@ -8,8 +8,8 @@ function run() {
   loadConfig()
   let msg = setDataGoogleSheet()
   let currentHour = calcTime('+7.0').getHours()
-  if (9 < currentHour && currentHour < 15 && Config.enable_send_mail[0] && msg != '') {
-    let htmlBody = "<h2>Hi, our stock's prices have been changed!</h2>" + msg
+  if (9 <= currentHour && currentHour <= 15 && Config.enable_send_mail[0] && msg != '') {
+    let htmlBody = "<h2>Hi, our stock's prices has been changed!</h2>" + msg
     sendMail(htmlBody)
   }
 }
@@ -117,6 +117,16 @@ function setDataGoogleSheet() {
     } else if (curPrice < refPrice) {
       priceRange.setFontColor('red')
     }
+    
+    refPriceRange.setValue(curStock['r_price'])
+    priceRange.setValue(curStock['price'])
+    highestPriceRange.setValue(curStock['h_price'])
+    lowestPriceRange.setValue(curStock['l_price'])
+    totalVolumeRange.setValue(curStock['volume'])
+    foreignBuyRange.setValue(curStock['f_buy_volume'])
+    foreignSellRange.setValue(curStock['f_sell_volume'])
+    
+    //tracking for alert
     if (oldPrice - curPrice != 0) {
       if (curPrice >= boughtPrice) {
         let profit = curPrice - boughtPrice
@@ -137,13 +147,6 @@ function setDataGoogleSheet() {
       }
     } 
     
-    refPriceRange.setValue(curStock['r_price'])
-    priceRange.setValue(curStock['price'])
-    highestPriceRange.setValue(curStock['h_price'])
-    lowestPriceRange.setValue(curStock['l_price'])
-    totalVolumeRange.setValue(curStock['volume'])
-    foreignBuyRange.setValue(curStock['f_buy_volume'])
-    foreignSellRange.setValue(curStock['f_sell_volume'])
   }
   sheet.getRange(1, 1, 1, 1).setValue('Last update: ' + new Date().toLocaleString('vn-VI', { timeZone: 'Asia/Ho_Chi_Minh' }))
   return message;
