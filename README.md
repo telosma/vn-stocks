@@ -19,3 +19,6 @@ Simple Google Apps Script to get Vietnamese Stock information such as *price*, *
 ## Current features
 - Reload stock price periodically
 - Send mail to receivers when prices change
+
+## TODO
+- Auto reload config from configuration sheet
