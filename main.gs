@@ -6,8 +6,8 @@ var Config = {}
 
 function run() {
   loadConfig()
-  let msg = setDataGoogleSheet()
-  let currentHour = calcTime('+7.0').getHours()
+  const msg = setDataGoogleSheet()
+  const currentHour = calcTime('+7.0').getHours()
   if (
     9 <= currentHour &&
     currentHour <= 15 &&
@@ -17,21 +17,6 @@ function run() {
     let htmlBody = "<h2>Hi, our stock's prices has been changed!</h2>" + msg
     sendMail(htmlBody)
   }
-}
-
-function calcTime(offset) {
-  // create Date object for current location
-  var d = new Date()
-
-  // convert to msec
-  // subtract local time zone offset
-  // get UTC time in msec
-  var utc = d.getTime() + d.getTimezoneOffset() * 60000
-
-  // create new Date object for different city
-  // using supplied offset
-  var localDate = new Date(utc + 3600000 * offset)
-  return localDate
 }
 
 function main() {
@@ -45,8 +30,8 @@ function main() {
 }
 
 function loadConfig() {
-  let sheet = SpreadsheetApp.getActive().getSheetByName(CONFIG_SHEET)
-  let data = sheet.getDataRange().getValues()
+  const sheet = SpreadsheetApp.getActive().getSheetByName(CONFIG_SHEET)
+  const data = sheet.getDataRange().getValues()
   for (var i in data) {
     let row = data[i]
     if (Config[row[0]]) {
@@ -84,8 +69,8 @@ function getStockdata(symbols) {
 }
 
 function setDataGoogleSheet() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('stocks')
-  var symbols = sheet.getRange('A3:A10').getValues()
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('stocks')
+  const symbols = sheet.getRange('A3:A10').getValues()
   symbols = symbols
     .filter(function (s) {
       return s[0].length > 0
@@ -97,7 +82,7 @@ function setDataGoogleSheet() {
   Logger.log(symbols)
 
   const stocks = getStockdata(symbols)
-  let startRow = 3
+  const startRow = 3
   let message = ''
   for (let idx = 0; idx < symbols.length; idx++) {
     let code = symbols[idx]
@@ -137,8 +122,8 @@ function setDataGoogleSheet() {
     //tracking for alert
     if (oldPrice - curPrice != 0) {
       if (curPrice >= boughtPrice) {
-        let profit = curPrice - boughtPrice
-        let profitPercent = parseFloat((profit * 100) / boughtPrice).toFixed(2)
+        const profit = curPrice - boughtPrice
+        const profitPercent = parseFloat((profit * 100) / boughtPrice).toFixed(2)
         if (profitPercent < Config.alert_threshold_profit_percent[0]) {
           continue
         }
@@ -153,12 +138,12 @@ function setDataGoogleSheet() {
           totalProfit
         )} ${PRICE_CURRENCY}</p>`
       } else {
-        let takeLoss = boughtPrice - curPrice
-        let lossPercent = parseFloat((takeLoss * 100) / boughtPrice).toFixed(2)
+        const takeLoss = boughtPrice - curPrice
+        const lossPercent = parseFloat((takeLoss * 100) / boughtPrice).toFixed(2)
         if (lossPercent < Config.alert_threshold_loss_percent[0]) {
           continue
         }
-        let totalLoss = parseFloat(
+        const totalLoss = parseFloat(
           takeLoss * currentStock * PRICE_UNIT
         ).toFixed(0)
         message += `<p>Code: ${makeLossFontTag(
@@ -180,6 +165,25 @@ function setDataGoogleSheet() {
   return message
 }
 
+/**
+ * Utils
+ */
+function calcTime(offset) {
+  // create Date object for current location
+  const d = new Date()
+
+  // convert to msec
+  // subtract local time zone offset
+  // get UTC time in msec
+  const utc = d.getTime() + d.getTimezoneOffset() * 60000
+
+  // create new Date object for different city
+  // using supplied offset
+  const localDate = new Date(utc + 3600000 * offset)
+
+  return localDate
+}
+
 function makeLossFontTag(con) {
   return `<strong style='color:red'>${con}</strong>`
 }
@@ -187,6 +191,7 @@ function makeLossFontTag(con) {
 function makeProfitFontTag(con) {
   return `<strong style='color:green'>${con}</strong>`
 }
+
 /**
  * Google trigger function. When the sheet is opened, a custom menu is produced.
  *
@@ -234,14 +239,14 @@ function createTblEnd(body) {
 }
 
 function createRow(isHeader, colVals, body, colProps) {
-  let colTagStart = '<td>'
-  let colTagEnd = '</td>'
+  const colTagStart = '<td>'
+  const colTagEnd = '</td>'
   if (isHeader) {
     colTagStart = '<th'
     colTagEnd = '</th>'
   }
   let row = ''
-  for (var i in ColNames) {
+  for (let i in ColNames) {
     colStr = colTagStart
     if (colProps.length > 0) {
       colStr += ' ' + colProps[i] + '>'
