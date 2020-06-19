@@ -7,10 +7,13 @@ var Config = {}
 function run() {
   loadConfig()
   let msg = setDataGoogleSheet()
-  let currentHour = calcTime('+7.0').getHours()
-  if (9 <= currentHour && currentHour <= 15 && Config.enable_send_mail[0] && msg != '') {
+  let currentTime = calcTime('+7.0')
+  let currentHour = currentTime.getHours()
+  let gapMs = new Date().getTime() - Config.last_update
+  if (9 <= currentHour && currentHour <= 15 && Config.enable_send_mail[0] && msg != '' && gapMs/(60*1000) > 30) {
     let htmlBody = "<h2>Hi, our stock's prices has been changed!</h2>" + msg
     sendMail(htmlBody)
+    SpreadsheetApp.getActiveSpreadsheet().getSheetByName('stocks').getRange(1, 8, 1, 1).setValue(new Date().getTime())
   }
 }
 
@@ -90,14 +93,17 @@ function setDataGoogleSheet() {
 
   const stocks = getStockdata(symbols)
   let startRow = 3
-  let message = ''
+  var message = ''
+  let total = 0
+  let row = 0
   for (let idx = 0; idx < symbols.length; idx++) {
     let code = symbols[idx]
     if (!stocks[code]) continue
     
     const curStock = stocks[code]
-    const row = startRow + idx
+    row = startRow + idx
     
+    const isHold = sheet.getRange(row, 2, 1, 1).getValue()
     const currentStock = sheet.getRange(row, 3, 1, 1).getValue()
     const boughtPrice = sheet.getRange(row, 4, 1, 1).getValue()
     const refPriceRange = sheet.getRange(row, 5, 1, 1)
@@ -126,29 +132,61 @@ function setDataGoogleSheet() {
     foreignBuyRange.setValue(curStock['f_buy_volume'])
     foreignSellRange.setValue(curStock['f_sell_volume'])
     
+    let profitLoss = sheet.getRange(row, 12, 1, 1)
+    let profitLossPercent = sheet.getRange(row, 13, 1, 1)
+    let isPriceChange = false
     //tracking for alert
     if (oldPrice - curPrice != 0) {
-      if (curPrice >= boughtPrice) {
-        let profit = curPrice - boughtPrice
+      isPriceChange = true
+    } 
+    if (curPrice >= boughtPrice) {
+        let checkPrice = curPrice
+        if (!isHold) {
+          checkPrice = sheet.getRange(row, 14, 1, 1).getValue()
+        }
+        let profit = checkPrice - boughtPrice
         let profitPercent = parseFloat(profit*100/boughtPrice).toFixed(2)
-        if (profitPercent < Config.alert_threshold_profit_percent[0]) {
+        let totalProfitNum = profit * currentStock*PRICE_UNIT
+        let totalProfit = parseFloat(totalProfitNum).toFixed(0)
+        profitLoss.setValue(totalProfit)
+        profitLoss.setFontColor('green')
+        profitLossPercent.setValue(profitPercent)
+        profitLossPercent.setFontColor('green')
+        total += totalProfitNum
+        if (profitPercent < Config.alert_threshold_profit_percent[0] || !isPriceChange || !isHold) {
           continue
         }
-        let totalProfit = parseFloat(profit * currentStock*PRICE_UNIT).toFixed(0)
         message += `<p>Code: ${makeProfitFontTag(code)} | Profit(%): ${makeProfitFontTag(profitPercent)} | Hold Stocks: ${currentStock} | Total Profit: ${makeProfitFontTag(totalProfit)} ${PRICE_CURRENCY}</p>`
       } else {
-        let takeLoss = boughtPrice - curPrice
+        let checkPrice = curPrice
+        if (!isHold) {
+          checkPrice = sheet.getRange(row, 14, 1, 1).getValue()
+        }
+        let takeLoss = boughtPrice - checkPrice
         let lossPercent = parseFloat(takeLoss*100/boughtPrice).toFixed(2)
-        if (lossPercent < Config.alert_threshold_loss_percent[0]) {
+        let totalLossNum = takeLoss * currentStock*PRICE_UNIT
+        let totalLoss = parseFloat(totalLossNum).toFixed(0)
+        profitLoss.setValue(totalLoss)
+        profitLoss.setFontColor('red')
+        profitLossPercent.setValue(lossPercent)
+        profitLossPercent.setFontColor('red')
+        total -= totalLossNum
+        if (lossPercent < Config.alert_threshold_loss_percent[0] || !isPriceChange || !isHold) {
           continue
         }
-        let totalLoss = parseFloat(takeLoss * currentStock*PRICE_UNIT).toFixed(0)
         message += `<p>Code: ${makeLossFontTag(code)} | Loss(%): ${makeLossFontTag(lossPercent)} | Hold Stocks: ${currentStock} | Total Loss: ${makeLossFontTag(totalLoss)} ${PRICE_CURRENCY}</p>`
       }
-    } 
-    
   }
-  sheet.getRange(1, 1, 1, 1).setValue('Last update: ' + new Date().toLocaleString('vn-VI', { timeZone: 'Asia/Ho_Chi_Minh' }))
+  sheet.getRange(row+1, 12, 1, 1).setValue(parseFloat(total).toFixed(0))
+  if (total > 0) {
+    sheet.getRange(row+1, 12, 1, 1).setFontColor('green')
+  } else {
+    sheet.getRange(row+1, 12, 1, 1).setFontColor('red')
+  }
+  
+  let current = new Date()
+  Config.last_update = sheet.getRange(1, 8, 1, 1).getValue()
+  sheet.getRange(1, 1, 1, 1).setValue(current.toLocaleString('vn-VI', { timeZone: 'Asia/Ho_Chi_Minh' }))
   return message;
 }
   
